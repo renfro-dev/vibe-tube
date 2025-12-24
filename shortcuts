@@ -1,0 +1,6 @@
+CMD + K - inline code edit
+CMD + L - open chat
+ESC - cancel
+CMD SHFT P - new terminal
+@filename - mention files in ai chat
+@codebase - reference entire codebase
