@@ -46,17 +46,21 @@ const NEWSLETTER_SENDERS = [
   'neuron'
 ];
 
-export async function fetchNewsletterEmails(days: number = 7): Promise<NewsletterEmail[]> {
+export async function fetchNewsletterEmails(fromDate: Date, toDate: Date): Promise<NewsletterEmail[]> {
   try {
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - days);
-    
-    const query = `from:(${NEWSLETTER_SENDERS.join(' OR ')}) after:${cutoffDate.toISOString().split('T')[0]}`;
-    
+    const afterDate = fromDate.toISOString().split('T')[0];
+    const beforeDate = toDate.toISOString().split('T')[0];
+
+    // Gmail 'before' is exclusive, so we might need to adjust logic if we want exact inclusive ranges,
+    // but for weekly chunks, standard YYYY-MM-DD usage is usually sufficient.
+    const query = `from:(${NEWSLETTER_SENDERS.join(' OR ')}) after:${afterDate} before:${beforeDate}`;
+
+    console.log(`Fetching Gmail query: ${query}`);
+
     const response = await gmail.users.messages.list({
       userId: 'me',
       q: query,
-      maxResults: 100, // Increased for 30-day timeframe
+      maxResults: 50, // Reduced per-chunk limit to avoid overwhelming
     });
 
     if (!response.data.messages) {
@@ -64,10 +68,10 @@ export async function fetchNewsletterEmails(days: number = 7): Promise<Newslette
     }
 
     const emails: NewsletterEmail[] = [];
-    
+
     for (const message of response.data.messages) {
       if (!message.id) continue;
-      
+
       const emailDetail = await gmail.users.messages.get({
         userId: 'me',
         id: message.id,
@@ -96,7 +100,7 @@ function parseEmailMessage(message: any): NewsletterEmail | null {
 
     // Extract email content
     const content = extractEmailContent(message.payload);
-    
+
     // Extract YouTube URLs
     const youtubeUrls = extractYouTubeUrls(content);
 
@@ -128,7 +132,7 @@ function extractEmailContent(payload: any): string {
           content += Buffer.from(part.body.data, 'base64').toString();
         }
       }
-      
+
       // Recursively check nested parts
       if (part.parts) {
         content += extractEmailContent(part);
