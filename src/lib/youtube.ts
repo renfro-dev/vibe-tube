@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { YoutubeTranscript } from 'youtube-transcript';
 
-const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
+const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY || process.env.GOOGLE_API_KEY;
 
 export interface YoutubeFormat {
   id: string;
@@ -23,7 +23,7 @@ export interface YoutubeFormat {
 }
 
 export async function fetchVideoMetadata(videoIds: string[]): Promise<YoutubeFormat[]> {
-  if (!GOOGLE_API_KEY || videoIds.length === 0) return [];
+  if (!YOUTUBE_API_KEY || videoIds.length === 0) return [];
 
   // Chunking validation (50 is max for youtube API usually)
   const chunks = [];
@@ -34,7 +34,7 @@ export async function fetchVideoMetadata(videoIds: string[]): Promise<YoutubeFor
   let allItems: any[] = [];
 
   for (const chunk of chunks) {
-    const url = `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id=${chunk.join(',')}&key=${GOOGLE_API_KEY}`;
+    const url = `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id=${chunk.join(',')}&key=${YOUTUBE_API_KEY}`;
 
     try {
       const response = await fetch(url);

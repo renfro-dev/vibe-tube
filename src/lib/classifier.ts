@@ -96,7 +96,7 @@ export async function classifyVideoAgent(
     if (apiKey) {
         try {
             const genAI = new GoogleGenerativeAI(apiKey);
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
 
             const transcriptSnippet = transcript ? transcript.slice(0, 15000) : "No transcript available."; // Limit for token efficiency if needed, though Flash is huge.
 
