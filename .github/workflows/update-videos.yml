@@ -1,0 +1,43 @@
+name: Update VibeTube Videos Weekly
+
+on:
+  schedule:
+    # Runs every Monday at 1:00 AM UTC (adjust as needed)
+    - cron: '0 1 * * 1'
+
+  # Allows manual triggering from GitHub Actions tab
+  workflow_dispatch:
+
+jobs:
+  update-videos:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger VibeTube Update
+        run: |
+          echo "Triggering VibeTube video update..."
+
+          response=$(curl -s -w "\n%{http_code}" \
+            -X GET \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            ${{ secrets.VIBETUBE_URL }}/api/cron/update-videos)
+
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | sed '$d')
+
+          echo "Response: $body"
+          echo "HTTP Status: $http_code"
+
+          if [ "$http_code" -ne 200 ]; then
+            echo "Error: Update failed with status $http_code"
+            exit 1
+          fi
+
+          echo "✅ VibeTube update completed successfully!"
+
+      - name: Summary
+        if: success()
+        run: |
+          echo "### ✅ VibeTube Updated Successfully" >> $GITHUB_STEP_SUMMARY
+          echo "Updated at: $(date -u)" >> $GITHUB_STEP_SUMMARY
+          echo "Next scheduled run: Every Monday at 1:00 AM UTC" >> $GITHUB_STEP_SUMMARY
