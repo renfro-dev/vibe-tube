@@ -161,9 +161,11 @@ export async function GET() {
       for (let i = 0; i < weeksToFetch; i++) {
         const toDate = new Date(now);
         toDate.setDate(now.getDate() - (i * 7));
+        // Add 1 day to toDate since Gmail's 'before:' is exclusive
+        toDate.setDate(toDate.getDate() + 1);
 
         const fromDate = new Date(toDate);
-        fromDate.setDate(toDate.getDate() - 7);
+        fromDate.setDate(toDate.getDate() - 8); // -8 instead of -7 to account for the +1 above
 
         try {
           if (i > 0) {
