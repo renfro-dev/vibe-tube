@@ -1,80 +1,81 @@
-# VibeTube 📺
+# VibeTube
 
-VibeTube is an AI-powered newsletter YouTube curator. It automatically scans your Gmail for newsletters from your favorite AI creators (like The Neuron, AI Breakfast, TLDR), extracts the YouTube videos they recommend, and organizes them into a clean, distraction-free viewing interface.
+A YouTube feed built from your AI newsletters. VibeTube scans a Gmail inbox for newsletters such as The Neuron, AI Breakfast, and TLDR, pulls out the YouTube videos they recommend, sorts each one into a topic, and shows them in a distraction-free player.
 
-![VibeTube Interface](https://placehold.co/800x400?text=VibeTube+Interface)
+## How it works
 
-## ✨ Features
+1. **Scan:** the Gmail API reads recent emails from a list of newsletter senders.
+2. **Extract:** YouTube links are parsed out of each email and validated.
+3. **Enrich:** the YouTube Data API adds title, channel, duration, and thumbnails.
+4. **Classify:** keyword scoring plus Gemini assigns each video a "vibe": Vibe Coding, Model Upgrades, Robots, Hype, Human in the Loop, Sustainability, Security, AI Fail, or Random.
+5. **Store and serve:** videos are saved to Supabase and shown in a filterable feed with an embedded player.
 
--   **Gmail Integration**: Automatically authenticates and scans your inbox for specific newsletter senders.
--   **Smart Extraction**: Parses email content to find and validate YouTube links.
--   **Rich Metadata**: Fetches video details (thumbnails, duration, channel) using the YouTube Data API.
--   **Organized Feed**:
-    -   Groups videos by their newsletter source (e.g., "The Neuron", "TLDR").
-    -   "All" view for a combined feed.
--   **Embedded Player**: Watch videos directly within the app without navigating away.
--   **Dashboard Metrics**: Tracks processed emails and found videos.
+A GitHub Actions workflow calls the update endpoint every Monday at 01:00 UTC, so the feed refreshes without anyone opening the app.
 
-## 🛠️ Tech Stack
+## Tech stack
 
--   **Framework**: [Next.js 15](https://nextjs.org/) (App Router)
--   **Language**: [TypeScript](https://www.typescriptlang.org/)
--   **Styling**: [Tailwind CSS 4](https://tailwindcss.com/)
--   **UI Components**: [Radix UI](https://www.radix-ui.com/) & [Lucide React](https://lucide.dev/)
--   **APIs**:
-    -   Gmail API (for reading newsletters)
-    -   YouTube Data API v3 (for video metadata)
+- Next.js 15 (App Router, Turbopack), React 19, TypeScript
+- Tailwind CSS 4, Radix UI, Lucide icons
+- Supabase (Postgres)
+- Gmail API, YouTube Data API v3, Gemini
 
-## 🚀 Getting Started
+## Run it locally
 
-### Prerequisites
+Requires Node.js 18+, a Supabase project, and a Google Cloud project with the Gmail API and YouTube Data API v3 enabled.
 
--   Node.js (v18+ recommended)
--   A Google Cloud Console project with **Gmail API** and **YouTube Data API v3** enabled.
--   OAuth 2.0 Credentials configured in Google Cloud.
-
-### Installation
-
-1.  **Clone the repository:**
-    ```bash
-    git clone https://github.com/yourusername/vibetube.git
-    cd vibetube
-    ```
-
-2.  **Install dependencies:**
-    ```bash
-    npm install
-    # or
-    yarn install
-    ```
-
-### Environment Setup
-
-Create a `.env.local` file in the root directory and add the following keys:
-
-```env
-# Google OAuth Credentials (for Gmail)
-GOOGLE_CLIENT_ID=your_client_id_here
-GOOGLE_CLIENT_SECRET=your_client_secret_here
-GOOGLE_REFRESH_TOKEN=your_refresh_token_here
-
-# YouTube API (for Metadata)
-YOUTUBE_API_KEY=your_youtube_api_key_here
+```bash
+git clone https://github.com/renfro-dev/vibe-tube.git
+cd vibe-tube
+npm install
 ```
 
-### Running the App
+Create the `videos` table by running [`schema.sql`](schema.sql) in the Supabase SQL editor, then add a `.env.local` file:
 
-Start the development server:
+```env
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=
+SUPABASE_SERVICE_ROLE_KEY=
+
+# Google OAuth (Gmail)
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GOOGLE_REFRESH_TOKEN=
+
+# YouTube metadata and Gemini classification
+YOUTUBE_API_KEY=
+GOOGLE_API_KEY=
+
+# Protects the admin actions and the cron endpoint
+ADMIN_PASSWORD=
+CRON_SECRET=
+```
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser.
+Open [http://localhost:3000](http://localhost:3000).
 
-## 📂 Project Structure
+## Project structure
 
--   `src/app/api/newsletters`: API route that handles Gmail fetching and parsing.
--   `src/lib/gmail.ts`: Gmail API integration and email parsing logic.
--   `src/lib/youtube.ts`: YouTube Data API integration for fetching video stats.
--   `src/components`: UI components including the video player and video cards.
+```
+src/app/page.tsx                    Feed and player UI
+src/app/api/newsletters/            Gmail fetch and parse
+src/app/api/cron/update-videos/     Scheduled refresh endpoint
+src/app/api/recategorize/           Re-run classification on stored videos
+src/lib/gmail.ts                    Gmail integration and email parsing
+src/lib/youtube.ts                  YouTube metadata
+src/lib/classifier.ts               Topic classification
+src/lib/supabase.ts                 Database client
+.github/workflows/update-videos.yml Weekly refresh
+```
+
+## More docs
+
+- [AUTOMATION_SETUP.md](AUTOMATION_SETUP.md): configuring the weekly refresh
+- [INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md): embedding the feed in another site
+- [docs/PRD.md](docs/PRD.md): product requirements
+
+## Status
+
+Personal project. The feed also runs inside [renfro.dev/vibetube](https://renfro.dev/vibetube).
